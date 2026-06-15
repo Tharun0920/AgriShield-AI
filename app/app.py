@@ -84,7 +84,6 @@ with tab2:
     else:
         st.error("Cannot find 'yield_model.pkl' in your models folder.")
 
-
 # --- TAB 3: GENERATIVE AI (EXPERT ADVISOR) ---
 with tab3:
     st.header("🤖 GenAI Agronomist")
@@ -101,18 +100,3 @@ with tab3:
             try:
                 with st.spinner("Analyzing agricultural data..."):
                     # Connect to the AI
-                    genai.configure(api_key=api_key)
-                    
-                    # 🔴 REPLACED LINE BELOW 🔴
-                    llm = genai.GenerativeModel('gemini-1.5-flash-latest') 
-                    
-                    # Create a strict persona for the AI
-                    prompt = f"You are an expert agronomist and agricultural data scientist. A farmer asks: {user_query}. Provide a structured, highly professional, and actionable response."
-                    
-                    response = llm.generate_content(prompt)
-                    
-                    st.success("Report Generated Successfully!")
-                    st.markdown("### 📋 Expert Advisory Report")
-                    st.write(response.text)
-            except Exception as e:
-                st.error(f"Error connecting to AI Server: {e}")
