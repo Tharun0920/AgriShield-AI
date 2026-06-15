@@ -5,7 +5,7 @@ os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 import streamlit as st
 import tensorflow as tf
 # --- FIXED KERAS IMPORT ---
-import tf_keras as keras
+import keras
 import pickle
 import numpy as np
 from PIL import Image
