@@ -1,4 +1,5 @@
 # Create FOUR visual tabs at the top of the webpage
+import string as st
 tab1, tab2, tab3, tab4 = st.tabs([
     "📸 Crop Disease Diagnostics", 
     "📊 Crop Yield Forecasting", 
