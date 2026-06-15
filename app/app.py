@@ -4,8 +4,8 @@ os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 import streamlit as st
 import tensorflow as tf
-# Explicitly import keras components to resolve the AttributeError namespace bug
-from tensorflow import keras
+# --- FIXED KERAS IMPORT ---
+import tf_keras as keras
 import pickle
 import numpy as np
 from PIL import Image
@@ -22,7 +22,7 @@ st.set_page_config(page_title="AgriShield AI Dashboard", page_icon="🌾", layou
 def load_vision_model():
     model_path = 'models/plant_disease_model.keras'
     if os.path.exists(model_path):
-        # Using the explicitly imported keras reference directly
+        # Using the standalone keras package
         return keras.models.load_model(model_path)
     return None
 
@@ -141,7 +141,6 @@ with tab3:
             with st.spinner("Analyzing agricultural data..."):
                 try:
                     genai.configure(api_key=api_key)
-                    # Fixed model route for stable production execution
                     llm = genai.GenerativeModel('gemini-2.5-flash')
                     system_prompt = f"You are an expert agronomist. Answer this query professionally: {prompt}"
                     response = llm.generate_content(system_prompt)
