@@ -122,7 +122,7 @@ with tab3:
             with st.spinner("Analyzing agricultural data..."):
                 try:
                     genai.configure(api_key=api_key)
-                    llm = genai.GenerativeModel('gemini-1.5-flash')
+                    llm = genai.GenerativeModel('gemini-2.5-flash')
                     
                     system_prompt = f"You are an expert agronomist. Answer this query professionally: {prompt}"
                     response = llm.generate_content(system_prompt)
