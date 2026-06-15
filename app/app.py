@@ -1,5 +1,5 @@
 import os
-# --- APPLE SILICON PROTOBUF FIX ---
+# --- MAC APPLE SILICON PROTOBUF FIX ---
 # This MUST remain at the very top, before any other imports!
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
@@ -92,10 +92,8 @@ with tab2:
                 prediction = yield_model.predict([user_inputs])
                 
                 st.balloons()
-                st.metric(label="Predicted Crop Yield Production", value=f"{prediction[0]:.2f}")
+                st.metric(label="Predicted Crop Yield Production", value=f"{prediction[0]:.2f} Quintals/Hectare")
                 
-        except ModuleNotFoundError:
-            st.error("Missing module! You must run: pip install scikit-learn")
         except Exception as e:
              st.error(f"An error occurred during yield forecasting: {e}")
     else:
