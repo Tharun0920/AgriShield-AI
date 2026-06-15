@@ -1,8 +1,11 @@
+import os
+# --- APPLE SILICON PROTOBUF FIX (MUST BE AT THE VERY TOP) ---
+os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
 import streamlit as st
 import tensorflow as tf
 import pickle
 import numpy as np
-import os
 from PIL import Image
 import google.generativeai as genai
 
@@ -63,7 +66,12 @@ with tab2:
             with open(yield_model_path, 'rb') as f:
                 yield_model = pickle.load(f)
             
-            expected_features = yield_model.feature_names_in_
+            # Safely get expected features
+            if hasattr(yield_model, "feature_names_in_"):
+                expected_features = yield_model.feature_names_in_
+            else:
+                expected_features = ["Temperature", "Rainfall", "Fertilizer", "Pesticide"]
+                
             st.write(f"This model was trained on **{len(expected_features)}** specific data points. Please fill them out below:")
             
             user_inputs = []
@@ -100,3 +108,18 @@ with tab3:
             try:
                 with st.spinner("Analyzing agricultural data..."):
                     # Connect to the AI
+                    genai.configure(api_key=api_key)
+                    
+                    # --- FIXED MODEL NAME FOR 2026 API COMPATIBILITY ---
+                    llm = genai.GenerativeModel('gemini-2.5-flash')
+                    
+                    # Create a strict persona for the AI
+                    prompt = f"You are an expert agronomist and agricultural data scientist. A farmer asks: {user_query}. Provide a structured, highly professional, and actionable response."
+                    
+                    response = llm.generate_content(prompt)
+                    
+                    st.success("Report Generated Successfully!")
+                    st.markdown("### 📋 Expert Advisory Report")
+                    st.write(response.text)
+            except Exception as e:
+                st.error(f"Error connecting to AI Server: {e}")
