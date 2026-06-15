@@ -1,11 +1,10 @@
 import os
-# --- APPLE SILICON PROTOBUF FIX (MUST BE AT THE VERY TOP) ---
+# --- APPLE SILICON FIXES (MUST BE AT THE VERY TOP) ---
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" # Suppress C++ warnings
 
 import streamlit as st
 import tensorflow as tf
-# --- FIXED KERAS IMPORT ---
-import keras
 import pickle
 import numpy as np
 from PIL import Image
@@ -13,30 +12,6 @@ import google.generativeai as genai
 
 # Set up beautiful page title and icon
 st.set_page_config(page_title="AgriShield AI Dashboard", page_icon="🌾", layout="wide")
-
-# ==========================================
-# MLOPS: RESOURCE CACHING
-# Load models once into server RAM for instant inference
-# ==========================================
-@st.cache_resource
-def load_vision_model():
-    model_path = 'models/plant_disease_model.keras'
-    if os.path.exists(model_path):
-        # Using the standalone keras package
-        return keras.models.load_model(model_path)
-    return None
-
-@st.cache_resource
-def load_tabular_model():
-    yield_model_path = 'models/yield_model.pkl'
-    if os.path.exists(yield_model_path):
-        with open(yield_model_path, 'rb') as f:
-            return pickle.load(f)
-    return None
-
-# Execute loading safely at initialization
-vision_model = load_vision_model()
-yield_model = load_tabular_model()
 
 # --- SIDEBAR FOR API KEY ---
 with st.sidebar:
@@ -69,13 +44,16 @@ with tab1:
             st.image(image, caption="Uploaded Crop Leaf", width=300)
             st.write("🔄 Analyzing image with Deep Learning...")
             
-            if vision_model is not None:
+            model_path = 'models/plant_disease_model.keras'
+            if os.path.exists(model_path):
+                # Load inline to prevent macOS threading crashes
+                vision_model = tf.keras.models.load_model(model_path)
                 img = image.resize((224, 224))
-                img_array = keras.utils.img_to_array(img)
+                img_array = tf.keras.utils.img_to_array(img)
                 img_array = tf.expand_dims(img_array, 0)
                 predictions = vision_model.predict(img_array)
                 
-                st.success("Analysis Complete (Cached Inference)!")
+                st.success("Analysis Complete!")
                 st.info("The Deep Learning model successfully processed the leaf architecture.")
             else:
                 st.warning("Vision model file not found in 'models/'. Running in Simulation Mode.")
@@ -88,8 +66,12 @@ with tab2:
     st.header("Yield Forecasting Analytics")
     st.write("Input current environmental factors to calculate expected crop production parameters.")
     
-    if yield_model is not None:
+    yield_model_path = 'models/yield_model.pkl'
+    if os.path.exists(yield_model_path):
         try:
+            with open(yield_model_path, 'rb') as f:
+                yield_model = pickle.load(f)
+                
             expected_features = yield_model.feature_names_in_
             st.write(f"This model was trained on **{len(expected_features)}** specific data points. Please fill them out below:")
             
@@ -178,18 +160,21 @@ with tab4:
         st.metric(label="Mean Absolute Error (MAE)", value="1.42 Quintals/ha")
         
         st.write("**Feature Importance Weights**")
-        if yield_model is not None:
+        yield_model_path_tab4 = 'models/yield_model.pkl'
+        
+        features = ["Temperature", "Rainfall", "Fertilizer", "Pesticide"]
+        importances = [0.45, 0.30, 0.15, 0.10]
+        
+        if os.path.exists(yield_model_path_tab4):
             try:
-                features = yield_model.feature_names_in_
+                with open(yield_model_path_tab4, 'rb') as f:
+                    temp_model = pickle.load(f)
+                features = temp_model.feature_names_in_
                 importances = [0.45, 0.30, 0.15, 0.10][:len(features)]
                 if len(features) != len(importances):
                     importances = [1.0 / len(features)] * len(features)
             except:
-                features = ["Temperature", "Rainfall", "Fertilizer", "Pesticide"]
-                importances = [0.45, 0.30, 0.15, 0.10]
-        else:
-            features = ["Temperature", "Rainfall", "Fertilizer", "Pesticide"]
-            importances = [0.45, 0.30, 0.15, 0.10]
+                pass
             
         feature_data = {feature: imp for feature, imp in zip(features, importances)}
         st.bar_chart(feature_data)
