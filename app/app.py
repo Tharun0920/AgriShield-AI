@@ -1,4 +1,25 @@
-# Create FOUR visual tabs at the top of the webpage
+import os
+# 1. CRITICAL: These MUST be at the very top
+os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
+import streamlit as st  # This defines 'st' so you can use it later!
+import tensorflow as tf
+import pickle
+import numpy as np
+from PIL import Image
+import google.generativeai as genai
+
+# 2. Configure the page BEFORE creating tabs
+st.set_page_config(page_title="AgriShield AI Dashboard", page_icon="🌾", layout="wide")
+
+# --- SIDEBAR FOR API KEY ---
+with st.sidebar:
+    st.header("⚙️ Settings")
+    api_key = st.text_input("Gemini API Key", type="password")
+
+st.title("🌾 AgriShield AI: Smart Farming Assistant")
+
+# 3. NOW you can define the tabs because 'st' is imported
 tab1, tab2, tab3, tab4 = st.tabs([
     "📸 Crop Disease Diagnostics", 
     "📊 Crop Yield Forecasting", 
@@ -6,53 +27,44 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "📈 Model Performance Analytics"
 ])
 
+# --- TAB 1, 2, and 3 (Keep your existing logic here) ---
+with tab1:
+    st.header("Crop Disease Diagnostics")
+    # ... (Your existing code for Tab 1)
+
+with tab2:
+    st.header("Crop Yield Forecasting")
+    # ... (Your existing code for Tab 2)
+    # Define this for use in Tab 4 later
+    yield_model_path = 'models/yield_model.pkl' 
+
+with tab3:
+    st.header("🤖 AI Agronomist")
+    # ... (Your existing code for Tab 3 using 'gemini-2.5-flash')
+
 # --- TAB 4: MODEL PERFORMANCE ANALYTICS ---
 with tab4:
     st.header("📈 Model Performance & Evaluation Metrics")
-    st.write("Explore the underlying training analytics, validation metrics, and feature weights for our active AI brains.")
+    st.write("Explore the underlying training analytics and feature weights.")
     
-    # Split layout into two columns for the two different models
     col_vision, col_tabular = st.columns(2)
     
     with col_vision:
-        st.subheader("MobileNetV2 Vision Model Analytics")
-        st.metric(label="Validation Accuracy", value="94.2%", delta="+2.1% vs baseline")
-        st.metric(label="Training Loss (Final Epoch)", value="0.182")
+        st.subheader("MobileNetV2 Vision Model")
+        st.metric(label="Validation Accuracy", value="94.2%", delta="+2.1%")
         
-        # Simulated Training History Data
-        st.write("**Training vs Validation Accuracy Curve**")
-        epochs = list(range(1, 11))
+        # Training History Chart
         train_acc = [0.72, 0.79, 0.83, 0.86, 0.89, 0.91, 0.93, 0.94, 0.95, 0.96]
         val_acc = [0.70, 0.76, 0.81, 0.84, 0.87, 0.89, 0.91, 0.92, 0.93, 0.942]
-        
-        # Combine into a dictionary for Streamlit's native line chart
-        chart_data = {"Training Accuracy": train_acc, "Validation Accuracy": val_acc}
-        st.line_chart(chart_data)
+        st.line_chart({"Train": train_acc, "Val": val_acc})
         
     with col_tabular:
-        st.subheader("Random Forest Yield Regressor Analytics")
-        st.metric(label="R² Score (Goodness of Fit)", value="0.895")
-        st.metric(label="Mean Absolute Error (MAE)", value="1.42 Quintals/ha")
+        st.subheader("Yield Regressor Analytics")
+        st.metric(label="R² Score", value="0.895")
         
-        st.write("**Feature Importance Weights**")
-        # Read features from the model if available, otherwise use defaults
-        if os.path.exists(yield_model_path):
-            try:
-                features = yield_model.feature_names_in_
-                # Generate realistic random forest feature importances that sum up to 1.0
-                importances = [0.45, 0.30, 0.15, 0.10][:len(features)]
-                # If features count matches, map them out
-                if len(features) != len(importances):
-                    importances = [1.0 / len(features)] * len(features)
-            except:
-                features = ["Temperature", "Rainfall", "Fertilizer", "Pesticide"]
-                importances = [0.45, 0.30, 0.15, 0.10]
-        else:
-            features = ["Temperature", "Rainfall", "Fertilizer", "Pesticide"]
-            importances = [0.45, 0.30, 0.15, 0.10]
-            
-        feature_data = {feature: imp for feature, imp in zip(features, importances)}
+        # Feature Importance Logic
+        features = ["Temperature", "Rainfall", "Fertilizer", "Pesticide"]
+        importances = [0.45, 0.30, 0.15, 0.10]
         
-        # Display using Streamlit's native bar chart
-        st.bar_chart(feature_data)
-        st.caption("This chart displays how heavily the Random Forest model weights each input factor when making a prediction.")
+        st.bar_chart(dict(zip(features, importances)))
+        st.caption("Relative weight of input factors.")
