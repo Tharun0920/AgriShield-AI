@@ -1,10 +1,15 @@
 import os
-# --- APPLE SILICON FIXES (MUST BE AT THE VERY TOP) ---
+# --- APPLE SILICON & NETWORK FIXES (MUST BE AT THE VERY TOP) ---
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" # Suppress C++ warnings
 
+# macOS SSL Certificate Patch for API Connections
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 import streamlit as st
 import tensorflow as tf
+import keras # Standalone import to prevent Keras 3.0 crashes
 import pickle
 import numpy as np
 from PIL import Image
@@ -46,10 +51,10 @@ with tab1:
             
             model_path = 'models/plant_disease_model.keras'
             if os.path.exists(model_path):
-                # Load inline to prevent macOS threading crashes
-                vision_model = tf.keras.models.load_model(model_path)
+                # Load inline using the standalone keras module
+                vision_model = keras.models.load_model(model_path)
                 img = image.resize((224, 224))
-                img_array = tf.keras.utils.img_to_array(img)
+                img_array = keras.utils.img_to_array(img)
                 img_array = tf.expand_dims(img_array, 0)
                 predictions = vision_model.predict(img_array)
                 
@@ -132,7 +137,9 @@ with tab3:
                         st.markdown(ai_answer)
                     st.session_state.messages.append({"role": "assistant", "content": ai_answer})
                 except Exception as e:
+                    # Provide deeper error tracing if it still fails
                     st.error(f"Error connecting to AI Server: {e}")
+                    st.caption("If this persists, check if a VPN or proxy network is blocking API traffic.")
 
 # --- TAB 4: MODEL PERFORMANCE ANALYTICS ---
 with tab4:
