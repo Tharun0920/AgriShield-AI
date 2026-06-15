@@ -9,7 +9,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 import streamlit as st
 import tensorflow as tf
-import keras # Standalone import to prevent Keras 3.0 crashes
+import keras # Standalone import to prevent Keras crashes
 import pickle
 import numpy as np
 from PIL import Image
@@ -137,7 +137,6 @@ with tab3:
                         st.markdown(ai_answer)
                     st.session_state.messages.append({"role": "assistant", "content": ai_answer})
                 except Exception as e:
-                    # Provide deeper error tracing if it still fails
                     st.error(f"Error connecting to AI Server: {e}")
                     st.caption("If this persists, check if a VPN or proxy network is blocking API traffic.")
 
